@@ -43,9 +43,8 @@ interface FlixApi {
     ): Response<String>
 
     @Multipart
-    @POST
+    @POST("upload/")
     suspend fun uploadFile(
-        @Url url: String = "http://localhost:8080/upload/",
         @Part filePart: MultipartBody.Part,
         @Header("Authorization") token: String
     ): Response<FlixUploadResponse>
