@@ -26,7 +26,10 @@ import com.droidcon.droidflix.data.auth.TokenProvider
 import com.droidcon.droidflix.data.model.FlixErrorResponse
 import com.droidcon.droidflix.data.model.parseErrorBody
 import com.droidcon.droidflix.data.prefs.AppPreferences
+import okhttp3.RequestBody
 import okhttp3.ResponseBody
+import okio.BufferedSink
+import okio.source
 import retrofit2.Converter
 import java.io.OutputStream
 
@@ -87,8 +90,18 @@ class FlixViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             uiState = FlixUiState.Loading
             try {
-                if (!flix.poster.isNullOrBlank()) { uploadFlixFile(flix.poster, contentResolver) }
-                if (!flix.video.isNullOrBlank()) { uploadFlixFile(flix.video, contentResolver) }
+                if (
+                    !flix.poster.isNullOrBlank() &&
+                    !uploadFlixFile(flix.poster, contentResolver)
+                ) {
+                    return@launch
+                }
+                if (
+                    !flix.video.isNullOrBlank() &&
+                    !uploadFlixFile(flix.video, contentResolver)
+                ) {
+                    return@launch
+                }
                 val response = hiltApi.addFlix(flix)
                 uiState = when {
                     response.code() == 401 -> FlixUiState.Unauthorized
@@ -123,7 +136,7 @@ class FlixViewModel @Inject constructor(
         }
     }
 
-    private suspend fun uploadFlixFile(path: String, contentResolver: ContentResolver) {
+    private suspend fun uploadFlixFile(path: String, contentResolver: ContentResolver): Boolean {
         val uri = path.toUri()
         val filePart = uriToMultipart(contentResolver, uri)
 
@@ -132,8 +145,16 @@ class FlixViewModel @Inject constructor(
             token = TokenProvider().getAccessToken()
         )
 
-        if (!response.isSuccessful || response.body()?.status != "SUCCESS") {
-            throw IOException("Upload failed: ${response.errorBody()?.string()}")
+        return when {
+            response.code() == 401 -> {
+                uiState = FlixUiState.Unauthorized
+                false
+            }
+            !response.isSuccessful || response.body()?.status != "SUCCESS" -> {
+                FlixUiState.ApiError(response.parseErrorBody(errorConverter))
+                false
+            }
+            else -> true
         }
     }
 
@@ -146,8 +167,16 @@ class FlixViewModel @Inject constructor(
         val inputStream = contentResolver.openInputStream(uri)
             ?: throw IOException("Cannot open input stream from URI: $uri")
 
-        val bytes = inputStream.readBytes()
-        val requestBody = bytes.toRequestBody("application/octet-stream".toMediaType())
+        val requestBody = object : RequestBody() {
+            override fun contentType() = (contentResolver.getType(uri) ?: "application/octet-stream").toMediaType()
+
+            override fun writeTo(sink: BufferedSink) {
+                inputStream.source().use { source ->
+                    sink.writeAll(source)
+                }
+            }
+        }
+
         return MultipartBody.Part.createFormData(partName, fileName, requestBody)
     }
 
