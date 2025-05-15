@@ -6,4 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.parcelize) apply false
     alias(libs.plugins.kotlin.compose.compiler) apply false
     alias(libs.plugins.aboutlibraries) apply false
+    alias(libs.plugins.kotlin.kapt) apply false
+    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.hilt.plugin) apply false
 }
