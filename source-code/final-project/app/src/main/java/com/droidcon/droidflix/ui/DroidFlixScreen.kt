@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +32,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.droidcon.droidflix.R
+import com.droidcon.droidflix.data.auth.AuthEventsViewModel
 import com.droidcon.droidflix.data.model.FlixNav
 import com.mikepenz.aboutlibraries.LibsBuilder
 import org.koin.androidx.compose.koinViewModel
@@ -103,12 +105,19 @@ fun DroidFlixApp(
     navController: NavHostController = rememberNavController(),
 ) {
     val viewModel: FlixViewModel = hiltViewModel()
+    val authEvents = hiltViewModel<AuthEventsViewModel>()
     val koinViewModel: FlixKoinViewModel = koinViewModel()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentScreen = FlixNav.getScreenByRoute(
         backStackEntry?.destination?.route ?: FlixNav.FlixList.route
     )
     viewModel.clearState()
+
+    LaunchedEffect(Unit) {
+        authEvents.onUnauthorized.collect {
+            navController.navigate(FlixNav.Login.route)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -158,9 +167,6 @@ fun DroidFlixApp(
             composable(FlixNav.FlixEdit.route) {
                 FlixEditScreen(
                     viewModel,
-                    onUnauthorized = {
-                        navController.navigate(FlixNav.Login.route)
-                    },
                     onFinish = {
                         navController.popBackStack()
                     },

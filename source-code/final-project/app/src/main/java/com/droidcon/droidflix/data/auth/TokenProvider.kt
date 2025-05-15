@@ -1,11 +1,16 @@
 package com.droidcon.droidflix.data.auth
 
 import com.droidcon.droidflix.data.prefs.AppPreferences
+import kotlin.random.Random
 
 class TokenProvider() {
 
     fun getAccessToken(): String {
-        return "Basic ${AppPreferences.username}:${AppPreferences.password}"
+        return if (System.currentTimeMillis() - AppPreferences.timestamp > 120000) {
+            "expired"
+        } else {
+            "Basic ${AppPreferences.username}:${AppPreferences.password}"
+        }
     }
 
     fun clearTokens() {
@@ -17,6 +22,6 @@ class TokenProvider() {
     // Just a simulation
     fun refreshAccessToken(): Boolean {
         Thread.sleep(500)
-        return System.currentTimeMillis() - AppPreferences.timestamp > 120000
+        return Random.nextBoolean()
     }
 }

@@ -1,9 +1,15 @@
 package com.droidcon.droidflix.data.auth
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.Interceptor
 import okhttp3.Response
 
-class AuthInterceptor(private val tokenProvider: TokenProvider) : Interceptor {
+class AuthInterceptor(
+    private val tokenProvider: TokenProvider,
+    private val authEvent: AuthEvents
+) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         var request = chain.request()
 
@@ -28,6 +34,9 @@ class AuthInterceptor(private val tokenProvider: TokenProvider) : Interceptor {
                         return chain.proceed(request)
                     } else {
                         tokenProvider.clearTokens()
+                        CoroutineScope(Dispatchers.Default).launch {
+                            authEvent.emitUnauthorized()
+                        }
                     }
                 }
             }

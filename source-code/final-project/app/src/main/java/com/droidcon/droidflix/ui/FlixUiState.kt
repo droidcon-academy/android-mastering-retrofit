@@ -6,7 +6,6 @@ sealed class FlixUiState {
     object Idle : FlixUiState()
     object Loading : FlixUiState()
     object Success : FlixUiState()
-    object Unauthorized : FlixUiState()
     data class ApiError(val error: FlixErrorResponse?) : FlixUiState()
     data class Error(val message: String) : FlixUiState()
 }

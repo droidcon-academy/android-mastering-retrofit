@@ -1,5 +1,9 @@
 package com.droidcon.droidflix.data
 
+import com.droidcon.droidflix.data.auth.AuthEvents
+import com.droidcon.droidflix.data.auth.AuthInterceptor
+import com.droidcon.droidflix.data.auth.TokenAuthenticator
+import com.droidcon.droidflix.data.auth.TokenProvider
 import com.droidcon.droidflix.data.model.FlixErrorResponse
 import dagger.Module
 import dagger.Provides
@@ -17,7 +21,10 @@ import javax.inject.Singleton
 class HiltDaggerRetrofit {
 
     @Provides
-    fun provideOkHttp(): OkHttpClient = buildOkHttpClient()
+    fun provideOkHttp(
+        authInterceptor: AuthInterceptor,
+        tokenAuthenticator: TokenAuthenticator
+    ): OkHttpClient = buildOkHttpClient(authInterceptor, tokenAuthenticator)
 
     @Provides
     @Singleton
@@ -38,4 +45,16 @@ class HiltDaggerRetrofit {
     fun provideErrorConverter(retrofit: Retrofit): Converter<ResponseBody, FlixErrorResponse> {
         return retrofit.responseBodyConverter(FlixErrorResponse::class.java, arrayOf())
     }
+
+    @Provides
+    @Singleton
+    fun tokenProvider(): TokenProvider = TokenProvider()
+
+    @Provides
+    @Singleton
+    fun tokenAuthenticator(tokenProvider: TokenProvider): TokenAuthenticator = TokenAuthenticator(tokenProvider)
+
+    @Provides
+    @Singleton
+    fun authInterceptor(tokenProvider: TokenProvider, authEvents: AuthEvents): AuthInterceptor = AuthInterceptor(tokenProvider, authEvents)
 }

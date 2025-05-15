@@ -28,7 +28,6 @@ import com.droidcon.droidflix.data.model.Flix
 @Composable
 fun FlixEditScreen(
     viewModel: FlixViewModel,
-    onUnauthorized: () -> Unit,
     onFinish: () -> Unit,
 ) {
     val oldFlix by viewModel.flix.collectAsState()
@@ -40,8 +39,6 @@ fun FlixEditScreen(
         if (uiState is FlixUiState.Success) {
             viewModel.clearState()
             onFinish()
-        } else if (uiState is FlixUiState.Unauthorized) {
-            onUnauthorized()
         }
     }
 

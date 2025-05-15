@@ -75,7 +75,6 @@ class FlixViewModel @Inject constructor(
                     newFlix.video ?: oldflix.video ?: ""
                 )
                 uiState = when {
-                    response.code() == 401 -> FlixUiState.Unauthorized
                     !response.isSuccessful -> FlixUiState.ApiError(response.parseErrorBody(errorConverter))
                     else -> FlixUiState.Success
                 }
@@ -103,7 +102,6 @@ class FlixViewModel @Inject constructor(
                 }
                 val response = hiltApi.addFlix(flix)
                 uiState = when {
-                    response.code() == 401 -> FlixUiState.Unauthorized
                     !response.isSuccessful -> FlixUiState.ApiError(response.parseErrorBody(errorConverter))
                     else -> FlixUiState.Success
                 }
@@ -145,10 +143,6 @@ class FlixViewModel @Inject constructor(
         )
 
         return when {
-            response.code() == 401 -> {
-                uiState = FlixUiState.Unauthorized
-                false
-            }
             !response.isSuccessful || response.body()?.status != "SUCCESS" -> {
                 FlixUiState.ApiError(response.parseErrorBody(errorConverter))
                 false
