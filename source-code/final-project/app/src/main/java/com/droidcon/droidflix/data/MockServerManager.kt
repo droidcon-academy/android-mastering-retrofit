@@ -1,9 +1,13 @@
 package com.droidcon.droidflix.data
 
+import android.content.Context
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
 
 object MockServerManager {
 
@@ -11,7 +15,7 @@ object MockServerManager {
 
     val baseUrl get() = server.url("/")
 
-    fun start() {
+    fun start(context: Context) {
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
                 val path = request.path ?: return MockResponse().setResponseCode(404)
@@ -22,7 +26,7 @@ object MockServerManager {
                         if (id.isBlank()) return MockResponse().setResponseCode(400)
                         MockResponse()
                             .setResponseCode(200)
-                            .setBody(sampleFlixJson)
+                            .setBody(getMockDataFromFile("mock/flixById/200.json", context))
                     }
 
                     path.startsWith("/flixSearch/") -> {
@@ -59,7 +63,6 @@ object MockServerManager {
         server.start(8080)
     }
 
-    //TODO move this to a file
     private val sampleFlixJson = """
         {
             "id": "1",
@@ -76,6 +79,26 @@ object MockServerManager {
         return List(10) {
             sampleFlixJson
         }.joinToString(",", prefix = "[", postfix = "]")
+    }
+
+    private fun getMockDataFromFile(fileName: String, context: Context): String {
+        var inputStream: InputStream? = null
+        var reader: InputStreamReader? = null
+        try {
+            inputStream = context.assets.open(fileName)
+            val builder = StringBuilder()
+            reader = InputStreamReader(inputStream, "UTF-8")
+            reader.readLines().forEach {
+                builder.append(it)
+            }
+
+            return builder.toString()
+        } catch (e: IOException) {
+            throw e
+        } finally {
+            inputStream?.close()
+            reader?.close()
+        }
     }
 
     fun shutdown() {

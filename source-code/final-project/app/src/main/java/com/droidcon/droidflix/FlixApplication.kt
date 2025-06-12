@@ -22,7 +22,7 @@ class FlixApplication: Application() {
         CacheProvider.init(this)
         if (BuildConfig.DEBUG) {
             CoroutineScope(Dispatchers.Default).launch {
-                MockServerManager.start()
+                MockServerManager.start(this@FlixApplication)
             }
         }
         startKoin {

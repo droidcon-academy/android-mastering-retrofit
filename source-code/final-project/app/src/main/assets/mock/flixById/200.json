@@ -1,0 +1,9 @@
+{
+  "id": "1",
+  "title": "Sample Movie",
+  "year": "2024",
+  "plot": "A test movie for mock server.",
+  "poster": "https://www.omdbapi.com/src/poster.jpg",
+  "video": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+  "ratings": [{"source": "IMDB", "value": "8.5/10"}]
+}
