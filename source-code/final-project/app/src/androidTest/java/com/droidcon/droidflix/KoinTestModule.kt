@@ -5,6 +5,8 @@ import com.droidcon.droidflix.data.model.Flix
 import com.droidcon.droidflix.data.model.FlixUploadResponse
 import com.droidcon.droidflix.data.model.Rating
 import okhttp3.MultipartBody
+import okhttp3.ResponseBody
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.koin.dsl.module
 import retrofit2.Response
 
@@ -24,15 +26,33 @@ val testModule = module {
                 return Response.success(fakeFlix)
             }
 
-            override suspend fun searchFlix(
-                query: String,
-                page: Int
-            ): Response<List<Flix>> {
-                TODO("Not yet implemented")
+            override suspend fun searchFlix(query: String, page: Int): Response<List<Flix>> {
+                val fakeResults = listOf(
+                    Flix(
+                        id = "1",
+                        title = "Search Result 1",
+                        year = "2025",
+                        plot = "Plot for result 1",
+                        poster = null,
+                        video = null,
+                        ratings = emptyList()
+                    ),
+                    Flix(
+                        id = "2",
+                        title = "Search Result 2",
+                        year = "2024",
+                        plot = "Plot for result 2",
+                        poster = null,
+                        video = null,
+                        ratings = emptyList()
+                    )
+                )
+                return Response.success(fakeResults)
             }
 
             override suspend fun addFlix(flix: Flix): Response<Unit> {
-                TODO("Not yet implemented")
+                // Assume it always succeeds
+                return Response.success(Unit)
             }
 
             override suspend fun editFlix(
@@ -43,15 +63,21 @@ val testModule = module {
                 poster: String?,
                 video: String?
             ): Response<String> {
-                TODO("Not yet implemented")
+                // Simulate a successful update returning the same ID
+                return Response.success(id)
             }
 
             override suspend fun uploadFile(
-                url: String,
                 filePart: MultipartBody.Part,
                 token: String
             ): Response<FlixUploadResponse> {
-                TODO("Not yet implemented")
+                val response = FlixUploadResponse(status = "Uploaded")
+                return Response.success(response)
+            }
+
+            override suspend fun downloadFile(fileUrl: String): Response<ResponseBody> {
+                val body = "Fake file content".toResponseBody(null)
+                return Response.success(body)
             }
         }
     }
