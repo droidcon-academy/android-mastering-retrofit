@@ -1,6 +1,8 @@
 package com.droidcon.droidflix.data
 
 import android.content.Context
+import com.droidcon.droidflix.data.model.Flix
+import kotlinx.serialization.json.Json
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -8,6 +10,7 @@ import okhttp3.mockwebserver.RecordedRequest
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
+import java.util.concurrent.TimeUnit
 
 object MockServerManager {
 
@@ -21,6 +24,13 @@ object MockServerManager {
                 val path = request.path ?: return MockResponse().setResponseCode(404)
 
                 return when {
+                    path.startsWith("/flixById/404") -> {
+                        MockResponse()
+                            .setBodyDelay(5, TimeUnit.SECONDS)
+                            .setResponseCode(404)
+                            .setBody("""{ "error": "Flix not found", "code": 404 }""")
+                    }
+
                     path.startsWith("/flixById/") -> {
                         val id = path.removePrefix("/flixById/")
                         if (id.isBlank()) return MockResponse().setResponseCode(400)
@@ -76,9 +86,17 @@ object MockServerManager {
     """.trimIndent()
 
     fun buildSearchResponse(): String {
-        return List(10) {
-            sampleFlixJson
-        }.joinToString(",", prefix = "[", postfix = "]")
+        val flix404 = Flix(
+            id = "404",
+            "404, cant be found",
+            "2025",
+            "This movie cant be found",
+            "https://www.omdbapi.com/src/poster.jpg",
+        "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        )
+        return List(9) { sampleFlixJson }
+            .plus(Json.encodeToString(Flix.serializer(), flix404))
+            .joinToString(",", prefix = "[", postfix = "]")
     }
 
     private fun getMockDataFromFile(fileName: String, context: Context): String {
